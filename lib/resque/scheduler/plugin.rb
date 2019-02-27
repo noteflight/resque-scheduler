@@ -26,6 +26,10 @@ module Resque
       def self.run_after_schedule_hooks(klass, *args)
         run_hooks(klass, 'after_schedule', *args)
       end
+
+      def self.run_before_recurring_hooks(klass)
+        run_hooks(klass, 'before_recurring', [])
+      end
     end
   end
 end
