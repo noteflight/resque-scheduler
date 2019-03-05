@@ -427,10 +427,20 @@ module Resque
       private
 
       def enqueue_recurring(name, config)
+        klass_name = config['class']
+        klass = Resque::Scheduler::Util.constantize(klass_name)
+        should_enqueue = Resque::Scheduler::Plugin.run_before_recurring_hooks(
+          klass
+        )
+
         if am_master
-          log! "queueing #{config['class']} (#{name})"
-          enqueue(config)
-          Resque.last_enqueued_at(name, Time.now.to_s)
+          if !should_enqueue
+            log! "skipping queueing of #{config['class']} (#{name})"
+          else
+            log! "queueing #{config['class']} (#{name})"
+            enqueue(config)
+            Resque.last_enqueued_at(name, Time.now.to_s)
+          end
         end
       end
 

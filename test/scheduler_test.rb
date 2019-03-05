@@ -117,6 +117,33 @@ context 'Resque::Scheduler' do
     assert Resque::Scheduler.scheduled_jobs.keys.include?('some_ivar_job')
   end
 
+  test 'enqueue_recurring should not enqueue if not should_enqueue' do
+    class CustomJob
+      def self.before_recurring(*args)
+        return false
+      end
+    end
+    Resque.expects(:last_enqueued_at).never
+    Resque::Scheduler.send(:enqueue_recurring, 'Job', {'class' => 'CustomJob'})
+  end
+
+  test 'enqueue_recurring should enqueue if should_enqueue' do
+    class CustomJob
+      def self.before_recurring(*args)
+        return true
+      end
+    end
+    Resque.expects(:last_enqueued_at)
+    Resque::Scheduler.send(:enqueue_recurring, 'Job', {'class' => 'CustomJob'})
+  end
+
+  test 'enqueue_recurring should enqueue if before_recurring not used' do
+    class CustomJob
+    end
+    Resque.expects(:last_enqueued_at)
+    Resque::Scheduler.send(:enqueue_recurring, 'Job', {'class' => 'CustomJob'})
+  end
+
   test 'load_schedule_job with every with options' do
     Resque::Scheduler.load_schedule_job(
       'some_ivar_job',
