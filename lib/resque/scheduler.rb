@@ -433,12 +433,14 @@ module Resque
           klass
         )
 
-        if am_master && !should_enqueue
-          log! "skipping queueing of #{config['class']} (#{name})"
-        elsif am_master && should_enqueue
-          log! "queueing #{config['class']} (#{name})"
-          enqueue(config)
-          Resque.last_enqueued_at(name, Time.now.to_s)
+        if am_master
+          if !should_enqueue
+            log! "skipping queueing of #{config['class']} (#{name})"
+          else
+            log! "queueing #{config['class']} (#{name})"
+            enqueue(config)
+            Resque.last_enqueued_at(name, Time.now.to_s)
+          end
         end
       end
 
